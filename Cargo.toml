@@ -4,5 +4,6 @@ version = "0.1.0"
 authors = ["Geoffroy Couprie <geo.couprie@gmail.com>"]
 
 [dependencies]
+handlebars = "0.22"
 serde_json = "0.8"
-#clap = "*"
+tempfile   = "2.1.4"
