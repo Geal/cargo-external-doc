@@ -50,7 +50,7 @@ fn main() {
     cargo.arg("doc");
     let stdout = cargo.output().map(|o| o.stdout).expect("could not open cargo output");
     let result: String = String::from_utf8(stdout).expect("cargo command failed");
-    println!("cargo result: {}", result);
+    //println!("cargo result: {}", result);
 
     let crate_name = get_package_name();
     let custom_doc_path = String::from("./target/doc/") + &crate_name;
@@ -61,12 +61,12 @@ fn main() {
     let (before_html, after_html) = generate_wrapper(&crate_name);
     let before_path = before_html.path();
     let after_path  = after_html.path();
-    println!("generating temporary HTML files at {:?} and {:?}", before_path, after_path);
+    //println!("generating temporary HTML files at {:?} and {:?}", before_path, after_path);
 
     let doc_files = fs::read_dir("./doc").expect("could not read directory content");
     for file in doc_files {
         if let Ok(entry) = file {
-            println!("will generate doc from {:?}", entry);
+            println!("generating doc from {:?}", entry.path());
             let mut test = Command::new("rustdoc");
             test.arg(entry.path());
             test.arg("--test");
@@ -78,7 +78,7 @@ fn main() {
                                   .expect("could not open rustdoc output");
             let test_result: String = String::from_utf8(test_stdout)
                                           .expect("rustdoc command failed");
-            println!("rustdoc --test result: {}", test_result);
+            //println!("rustdoc --test result: {}", test_result);
 
             let mut rustdoc = Command::new("rustdoc");
             rustdoc.arg(entry.path());
@@ -102,7 +102,7 @@ fn main() {
                                     .map(|o| o.stdout)
                                     .expect("could not open rustdoc output");
             let doc_result: String = String::from_utf8(doc_stdout).expect("rustdoc command failed");
-            println!("rustdoc result: {}", doc_result);
+            //println!("rustdoc result: {}", doc_result);
         }
     }
 }
