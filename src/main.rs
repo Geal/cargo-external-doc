@@ -1,4 +1,3 @@
-//! hello!
 extern crate handlebars;
 extern crate serde_json;
 extern crate tempfile;
@@ -107,5 +106,3 @@ fn main() {
     }
 }
 
-/// Hi
-pub fn hello() {}
