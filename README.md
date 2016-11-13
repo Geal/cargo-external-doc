@@ -39,6 +39,14 @@ Your other documentation files can reference it by relative URL, like this for a
 cf the [guide](guide.html)
 ```
 
+## Example
+
+In nom, you can see:
+- the [`doc/` folder](https://github.com/Geal/nom/tree/master/doc)
+- the [online reference](http://dev.unhandledexpression.com/nom-2.0/nom/index.html) with links to articles
+- the [links in `src/lib.rs`](https://github.com/Geal/nom/blob/master/src/lib.rs#L8-L13)
+- the [parser writing article](http://dev.unhandledexpression.com/nom-2.0/nom/making_a_new_parser_from_scratch.html) and its [source](https://github.com/Geal/nom/blob/master/doc/making_a_new_parser_from_scratch.md)
+
 ## Caveats
 
 This tool is a temporary solution, until something better is
