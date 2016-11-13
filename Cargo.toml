@@ -1,0 +1,8 @@
+[package]
+name = "cargo-external-doc"
+version = "0.1.0"
+authors = ["Geoffroy Couprie <geo.couprie@gmail.com>"]
+
+[dependencies]
+serde_json = "0.8"
+#clap = "*"
