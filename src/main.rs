@@ -18,7 +18,7 @@ fn get_package_name() -> String {
                      .expect("invalid encoding");
     let value: Value = serde_json::from_str(&stdout).expect("invalid JSON metadata");
     let main: &Map<String, Value> = value.as_object().expect("top level value is not an object");
-    String::from(main["name"].as_str().expect("invalid main string"))
+    String::from(main["name"].as_str().expect("invalid main string")).replace('-', "_")
 }
 
 fn generate_wrapper(name: &str) -> (NamedTempFile,NamedTempFile) {
