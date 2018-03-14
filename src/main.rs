@@ -60,12 +60,19 @@ fn generate_wrapper(name: &str) -> (NamedTempFile, NamedTempFile) {
 fn main() {
     let mut cargo = Command::new("cargo");
     cargo.arg("doc");
-    let stdout = cargo
-        .output()
-        .map(|o| o.stdout)
-        .expect("could not open cargo output");
-    let result: String = String::from_utf8(stdout).expect("cargo command failed");
-    //println!("cargo result: {}", result);
+    let output = cargo.output().expect("could not executed cargo doc");
+    if !output.status.success() {
+        eprintln!("failed to execute cargo doc");
+        println!(
+            "{}",
+            str::from_utf8(&output.stdout).expect("stdout is no UTF8")
+        );
+        eprintln!(
+            "{}",
+            str::from_utf8(&output.stderr).expect("stderr is no UTF8")
+        );
+        exit(output.status.code().unwrap_or(1))
+    }
 
     let crate_name = get_package_name();
     let custom_doc_path = String::from("./target/doc/") + &crate_name;
@@ -88,7 +95,7 @@ fn main() {
             test.arg("-L");
             // FIXME: the debug folder has to be there, then :/
             test.arg("./target/debug/");
-            let output = test.output().expect("could not execute process");
+            let output = test.output().expect("could not execute rustdoc --test");
             if !output.status.success() {
                 eprintln!(
                     "failed to execute doc tests for: {}",
@@ -123,7 +130,7 @@ fn main() {
             // FIXME: the debug folder has to be there, then :/
             rustdoc.arg("./target/debug/");
             rustdoc.arg("-v");
-            let output = rustdoc.output().expect("could not open rustdoc output");
+            let output = rustdoc.output().expect("could not execute rustdoc");
             if !output.status.success() {
                 eprintln!(
                     "failed to execute doc tests for: {}",
