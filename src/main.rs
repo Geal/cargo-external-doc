@@ -5,7 +5,8 @@ extern crate tempfile;
 use std::fs;
 use std::io::Write;
 use std::collections::HashMap;
-use std::process::Command;
+use std::process::{exit, Command};
+use std::str;
 
 use handlebars::Handlebars;
 use serde_json::{Map, Value};
@@ -87,12 +88,22 @@ fn main() {
             test.arg("-L");
             // FIXME: the debug folder has to be there, then :/
             test.arg("./target/debug/");
-            let test_stdout = test.output()
-                .map(|o| o.stdout)
-                .expect("could not open rustdoc output");
-            let test_result: String =
-                String::from_utf8(test_stdout).expect("rustdoc command failed");
-            //println!("rustdoc --test result: {}", test_result);
+            let output = test.output().expect("could not execute process");
+            if !output.status.success() {
+                eprintln!(
+                    "failed to execute doc tests for: {}",
+                    entry.path().to_string_lossy()
+                );
+                println!(
+                    "{}",
+                    str::from_utf8(&output.stdout).expect("stdout is no UTF8")
+                );
+                eprintln!(
+                    "{}",
+                    str::from_utf8(&output.stderr).expect("stderr is no UTF8")
+                );
+                exit(output.status.code().unwrap_or(1))
+            }
 
             let mut rustdoc = Command::new("rustdoc");
             rustdoc.arg(entry.path());
@@ -112,11 +123,23 @@ fn main() {
             // FIXME: the debug folder has to be there, then :/
             rustdoc.arg("./target/debug/");
             rustdoc.arg("-v");
-            let doc_stdout = rustdoc
-                .output()
-                .map(|o| o.stdout)
-                .expect("could not open rustdoc output");
-            let doc_result: String = String::from_utf8(doc_stdout).expect("rustdoc command failed");
+            let output = rustdoc.output().expect("could not open rustdoc output");
+            if !output.status.success() {
+                eprintln!(
+                    "failed to execute doc tests for: {}",
+                    entry.path().to_string_lossy()
+                );
+                println!(
+                    "{}",
+                    str::from_utf8(&output.stdout).expect("stdout is no UTF8")
+                );
+                eprintln!(
+                    "{}",
+                    str::from_utf8(&output.stderr).expect("stderr is no UTF8")
+                );
+                exit(output.status.code().unwrap_or(1))
+            }
+
             //println!("rustdoc result: {}", doc_result);
         }
     }
