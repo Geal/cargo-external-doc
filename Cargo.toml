@@ -12,3 +12,4 @@ keywords = ["documentation", "markdown"]
 handlebars = "0.22"
 serde_json = "0.8"
 tempfile   = "2.1.4"
+walkdir    = "2.2.9"

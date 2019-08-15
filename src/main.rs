@@ -1,12 +1,14 @@
 extern crate handlebars;
 extern crate serde_json;
 extern crate tempfile;
+extern crate walkdir;
 
+use std::collections::HashMap;
 use std::fs;
 use std::io::Write;
-use std::collections::HashMap;
 use std::process::{exit, Command};
 use std::str;
+use walkdir::WalkDir;
 
 use handlebars::Handlebars;
 use serde_json::{Map, Value};
@@ -85,69 +87,85 @@ fn main() {
     let after_path = after_html.path();
     //println!("generating temporary HTML files at {:?} and {:?}", before_path, after_path);
 
-    let doc_files = fs::read_dir("./doc").expect("could not read directory content");
-    for file in doc_files {
-        if let Ok(entry) = file {
-            println!("generating doc from {:?}", entry.path());
-            let mut test = Command::new("rustdoc");
-            test.arg(entry.path());
-            test.arg("--test");
-            test.arg("-L");
-            // FIXME: the debug folder has to be there, then :/
-            test.arg("./target/debug/");
-            let output = test.output().expect("could not execute rustdoc --test");
-            if !output.status.success() {
-                eprintln!(
-                    "failed to execute doc tests for: {}",
-                    entry.path().to_string_lossy()
-                );
-                println!(
-                    "{}",
-                    str::from_utf8(&output.stdout).expect("stdout is no UTF8")
-                );
-                eprintln!(
-                    "{}",
-                    str::from_utf8(&output.stderr).expect("stderr is no UTF8")
-                );
-                exit(output.status.code().unwrap_or(1))
-            }
-
-            let mut rustdoc = Command::new("rustdoc");
-            rustdoc.arg(entry.path());
-            rustdoc.arg("--crate-name");
-            rustdoc.arg(&crate_name);
-            rustdoc.arg("-o");
-            rustdoc.arg(&custom_doc_path);
-            rustdoc.arg("--markdown-css");
-            rustdoc.arg("../rustdoc.css");
-            rustdoc.arg("--markdown-css");
-            rustdoc.arg("../main.css");
-            rustdoc.arg("--html-before-content");
-            rustdoc.arg(before_path);
-            rustdoc.arg("--html-after-content");
-            rustdoc.arg(after_path);
-            rustdoc.arg("-L");
-            // FIXME: the debug folder has to be there, then :/
-            rustdoc.arg("./target/debug/");
-            rustdoc.arg("-v");
-            let output = rustdoc.output().expect("could not execute rustdoc");
-            if !output.status.success() {
-                eprintln!(
-                    "failed to execute doc tests for: {}",
-                    entry.path().to_string_lossy()
-                );
-                println!(
-                    "{}",
-                    str::from_utf8(&output.stdout).expect("stdout is no UTF8")
-                );
-                eprintln!(
-                    "{}",
-                    str::from_utf8(&output.stderr).expect("stderr is no UTF8")
-                );
-                exit(output.status.code().unwrap_or(1))
-            }
-
-            //println!("rustdoc result: {}", doc_result);
+    for entry in WalkDir::new("./doc") {
+        let entry = entry.unwrap();
+        if entry.path().is_dir() {
+            continue;
         }
+        println!("generating doc from {:?}", entry.path());
+
+        let mut test = Command::new("rustdoc");
+        test.arg(entry.path());
+        test.arg("--test");
+        test.arg("-L");
+        // FIXME: the debug folder has to be there, then :/
+        test.arg("./target/debug/");
+        let output = test.output().expect("could not execute rustdoc --test");
+        if !output.status.success() {
+            eprintln!(
+                "failed to execute doc tests for: {}",
+                entry.path().to_string_lossy()
+            );
+            println!(
+                "{}",
+                str::from_utf8(&output.stdout).expect("stdout is no UTF8")
+            );
+            eprintln!(
+                "{}",
+                str::from_utf8(&output.stderr).expect("stderr is no UTF8")
+            );
+            exit(output.status.code().unwrap_or(1))
+        }
+
+        let subdir = entry
+            .path()
+            .strip_prefix("./doc")
+            .unwrap()
+            .parent()
+            .unwrap()
+            .to_string_lossy();
+
+        let mut doc_path = custom_doc_path.clone();
+        if subdir != "" {
+            doc_path += "/";
+            doc_path += &subdir;
+        }
+        fs::create_dir_all(&doc_path).expect("could not create directory");
+        let mut rustdoc = Command::new("rustdoc");
+        rustdoc.arg(entry.path());
+        rustdoc.arg("--crate-name");
+        rustdoc.arg(&crate_name);
+        rustdoc.arg("-o");
+        rustdoc.arg(&doc_path);
+        rustdoc.arg("--markdown-css");
+        rustdoc.arg("../rustdoc.css");
+        rustdoc.arg("--markdown-css");
+        rustdoc.arg("../main.css");
+        rustdoc.arg("--html-before-content");
+        rustdoc.arg(before_path);
+        rustdoc.arg("--html-after-content");
+        rustdoc.arg(after_path);
+        rustdoc.arg("-L");
+        // FIXME: the debug folder has to be there, then :/
+        rustdoc.arg("./target/debug/");
+        rustdoc.arg("-v");
+        let output = rustdoc.output().expect("could not execute rustdoc");
+        if !output.status.success() {
+            eprintln!(
+                "failed to execute doc tests for: {}",
+                entry.path().to_string_lossy()
+            );
+            println!(
+                "{}",
+                str::from_utf8(&output.stdout).expect("stdout is no UTF8")
+            );
+            eprintln!(
+                "{}",
+                str::from_utf8(&output.stderr).expect("stderr is no UTF8")
+            );
+            exit(output.status.code().unwrap_or(1))
+        }
+
+        //println!("rustdoc result: {}", doc_result);
     }
 }
