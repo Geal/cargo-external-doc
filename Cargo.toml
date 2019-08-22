@@ -1,6 +1,6 @@
 [package]
 name = "cargo-external-doc"
-version = "0.1.0"
+version = "0.2.0"
 authors = ["Geoffroy Couprie <geo.couprie@gmail.com>"]
 description = "add long text articles to your crate's documentation"
 license = "MIT"
