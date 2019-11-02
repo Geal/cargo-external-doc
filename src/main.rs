@@ -14,14 +14,17 @@ use handlebars::Handlebars;
 use serde_json::{Map, Value};
 use tempfile::NamedTempFile;
 
-fn get_package_name() -> String {
+fn get_package_name_and_edition() -> (String, String) {
     let mut cargo = Command::new("cargo");
     cargo.arg("read-manifest");
     let stdout = String::from_utf8(cargo.output().expect("`cargo metadata` did not run").stdout)
         .expect("invalid encoding");
     let value: Value = serde_json::from_str(&stdout).expect("invalid JSON metadata");
     let main: &Map<String, Value> = value.as_object().expect("top level value is not an object");
-    String::from(main["name"].as_str().expect("invalid main string")).replace('-', "_")
+    (
+        String::from(main["name"].as_str().expect("invalid main string")).replace('-', "_"),
+        main["edition"].as_str().expect("invalid edition").into(),
+    )
 }
 
 fn generate_wrapper(name: &str) -> (NamedTempFile, NamedTempFile) {
@@ -76,7 +79,7 @@ fn main() {
         exit(output.status.code().unwrap_or(1))
     }
 
-    let crate_name = get_package_name();
+    let (crate_name, edition) = get_package_name_and_edition();
     let custom_doc_path = String::from("./target/doc/") + &crate_name;
     // FIXME: should handle the cargo env variables that override target folder
     // or get the target folder from cargo
@@ -97,6 +100,8 @@ fn main() {
         let mut test = Command::new("rustdoc");
         test.arg(entry.path());
         test.arg("--test");
+        test.arg("--edition");
+        test.arg(&edition);
         test.arg("-L");
         // FIXME: the debug folder has to be there, then :/
         test.arg("./target/debug/");
