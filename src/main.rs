@@ -24,10 +24,11 @@ fn get_package_name() -> String {
     String::from(main["name"].as_str().expect("invalid main string")).replace('-', "_")
 }
 
-fn generate_wrapper(name: &str) -> (NamedTempFile, NamedTempFile) {
+fn generate_wrapper(name: &str) -> (NamedTempFile, NamedTempFile, NamedTempFile) {
     let handlebars = Handlebars::new();
     let before = include_str!("../templates/before.html");
     let after = include_str!("../templates/after.html");
+    let in_header = include_str!("../templates/in_header.html");
 
     let mut hash = HashMap::new();
     hash.insert(String::from("name"), String::from(name));
@@ -38,9 +39,13 @@ fn generate_wrapper(name: &str) -> (NamedTempFile, NamedTempFile) {
     let after_html = handlebars
         .template_render(after, &hash)
         .expect("could not render the HTML suffix file");
+    let in_header_html = handlebars
+        .template_render(in_header, &hash)
+        .expect("could not render the HTML suffix file");
 
     let mut before_file = NamedTempFile::new().expect("could not create temporary file");
     let mut after_file = NamedTempFile::new().expect("could not create temporary file");
+    let mut in_header_file = NamedTempFile::new().expect("could not create temporary file");
 
     before_file
         .write_all(before_html.as_bytes())
@@ -54,8 +59,14 @@ fn generate_wrapper(name: &str) -> (NamedTempFile, NamedTempFile) {
     after_file
         .flush()
         .expect("could not write the HTML suffix file");
+    in_header_file
+        .write_all(in_header_html.as_bytes())
+        .expect("could not write the HTML prefix file");
+    in_header_file
+        .flush()
+        .expect("could not write the HTML suffix file");
 
-    (before_file, after_file)
+    (before_file, after_file, in_header_file)
 }
 
 ///test
@@ -82,9 +93,10 @@ fn main() {
     // or get the target folder from cargo
     fs::create_dir_all(&custom_doc_path).expect("could not create directory");
 
-    let (before_html, after_html) = generate_wrapper(&crate_name);
+    let (before_html, after_html, in_header_html) = generate_wrapper(&crate_name);
     let before_path = before_html.path();
     let after_path = after_html.path();
+    let in_header_path = in_header_html.path();
     //println!("generating temporary HTML files at {:?} and {:?}", before_path, after_path);
 
     for entry in WalkDir::new("./doc") {
@@ -137,10 +149,8 @@ fn main() {
         rustdoc.arg(&crate_name);
         rustdoc.arg("-o");
         rustdoc.arg(&doc_path);
-        rustdoc.arg("--markdown-css");
-        rustdoc.arg("../rustdoc.css");
-        rustdoc.arg("--markdown-css");
-        rustdoc.arg("../main.css");
+        rustdoc.arg("--html-in-header");
+        rustdoc.arg(in_header_path);
         rustdoc.arg("--html-before-content");
         rustdoc.arg(before_path);
         rustdoc.arg("--html-after-content");
