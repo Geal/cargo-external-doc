@@ -1,30 +1,40 @@
-<style>
-.content a {
-  color: #3873AD;
-}
-.content .section-header a,
-.content .search-results a {
-  color: #000;
-}
-</style>
-
 <nav class="sidebar">
-
-  <p class='location'><a href='index.html'>{{name}}</a></p>
-    <script defer src="../sidebar-items.js"></script>
+    <div class="sidebar-menu">&#9776;</div>
+    <a href='../{{name}}/index.html'>
+        <div class='logo-container'><img src='../rust-logo.png' alt='logo'></div>
+    </a>
+    <p class='location'>Crate {{name}}</p>
+    <div class="sidebar-elems">
+        <a id='all-types' href='all.html'>
+            <p>See all {{name}}'s items</p>
+        </a>
+        <p class='location'></p>
+        <script>
+            window.sidebarCurrent = {
+                name: '{{name}}',
+                ty: 'mod',
+                relpath: '../'
+            };
+        </script>
+    </div>
 </nav>
-
+<div class="theme-picker">
+    <button id="theme-picker" aria-label="Pick another theme!"><img src="../brush.svg" width="18" alt="Pick another theme!"></button>
+    <div id="theme-choices"></div>
+</div>
+<script src="../theme.js"></script>
 <nav class="sub">
-		<form class="search-form js-only">
-				<div class="search-container">
-						<input class="search-input" name="search"
-									 autocomplete="off"
-									 placeholder="Click or press ‘S’ to search, ‘?’ for more options…"
-									 type="search">
-				</div>
-		</form>
+    <form class="search-form js-only">
+        <div class="search-container">
+            <div>
+                <select id="crate-search">
+                    <option value="All crates">All crates</option>
+                </select>
+                <input class="search-input" name="search" autocomplete="off" spellcheck="false" placeholder="Click or press ‘S’ to search, ‘?’ for more options…" type="search">
+            </div>
+            <a id="settings-menu" href="../settings.html"><img src="../wheel.svg" width="18" alt="Change settings"></a>
+        </div>
+    </form>
 </nav>
-
-<section id='main' class="content fn">
-
-
+<section id="main" class="content">
+    <div class='docblock'>
